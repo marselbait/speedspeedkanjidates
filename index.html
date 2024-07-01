@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro-Futuristic Speed Speed Japanese Dates</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'VT323', monospace;
+            color: #fff;
+            overflow: hidden;
+            background-color: #2b0a3a;
+        }
+
+        .game-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        .retro-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #2b0a3a 25%, #3d1657 25%, #3d1657 50%, #2b0a3a 50%, #2b0a3a 75%, #3d1657 75%);
+            background-size: 40px 40px;
+            animation: moveBackground 5s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes moveBackground {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+
+        #game-title {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px #ff00ff, -3px -3px #00ffff;
+            color: #fff700;
+        }
+
+        #date {
+            font-size: 48px;
+            margin: 20px 0;
+            color: #fff;
+            text-shadow: 2px 2px #ff00ff;
+        }
+
+        #timer-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #timer {
+            width: 300px;
+            height: 30px;
+            background-color: #1a0628;
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
+            overflow: hidden;
+        }
+
+        #timerBar {
+            height: 100%;
+            width: 100%;
+            background-color: #00ffff;
+            transition: width 0.1s linear;
+        }
+
+        #timerText {
+            margin-left: 10px;
+            font-size: 24px;
+            color: #00ffff;
+            text-shadow: 2px 2px #ff00ff;
+        }
+
+        .button-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 90%;
+            max-width: 300px;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 20px;
+            font-family: 'VT323', monospace;
+            background-color: #3d1657;
+            border: 2px solid #ff00ff;
+            color: #fff;
+            text-shadow: 2px 2px #ff00ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #5a2280;
+            box-shadow: 0 0 15px #ff00ff;
+        }
+
+        #score, #life, #questionsLeft, #startButton {
+            margin-top: 20px;
+            font-size: 24px;
+            text-shadow: 2px 2px #ff00ff;
+        }
+
+        #startButton {
+            background-color: #ff00ff;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            text-shadow: 2px 2px #2b0a3a;
+        }
+
+        #startButton:hover {
+            background-color: #ff40ff;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #3d1657;
+            border: 2px solid #ff00ff;
+            padding: 20px;
+            z-index: 1000;
+            text-align: center;
+            font-size: 24px;
+            color: #fff;
+            text-shadow: 2px 2px #ff00ff;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+
+        .popup button {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="retro-background"></div>
+    <div class="game-container">
+        <div id="game-title">Speed Speed Japanese Dates</div>
+        <div id="timer-container">
+            <div id="timer"><div id="timerBar"></div></div>
+            <div id="timerText">7.0</div>
+        </div>
+        <div id="date"></div>
+        <div id="options" class="button-container"></div>
+        <div id="score">Score: 0</div>
+        <div id="life">Life: 5</div>
+        <div id="questionsLeft">Questions Left: 20</div>
+        <button id="startButton" onclick="startGame()">Start Game</button>
+    </div>
+
+    <div id="popup" class="popup">
+        <p id="popupMessage"></p>
+        <button onclick="closePopup()">OK</button>
+    </div>
+
+    <script>
+        const dateList = [
+            {"japanese": "ついたち", "english": "the 1st", "incorrect": ["the 2nd", "the 3rd", "the 4th"]},
+            {"japanese": "ふつか", "english": "the 2nd", "incorrect": ["the 1st", "the 3rd", "the 4th"]},
+            {"japanese": "みっか", "english": "the 3rd", "incorrect": ["the 2nd", "the 4th", "the 5th"]},
+            {"japanese": "よっか", "english": "the 4th", "incorrect": ["the 3rd", "the 5th", "the 6th"]},
+            {"japanese": "いつか", "english": "the 5th", "incorrect": ["the 4th", "the 6th", "the 7th"]},
+            {"japanese": "むいか", "english": "the 6th", "incorrect": ["the 5th", "the 7th", "the 8th"]},
+            {"japanese": "なのか", "english": "the 7th", "incorrect": ["the 6th", "the 8th", "the 9th"]},
+            {"japanese": "ようか", "english": "the 8th", "incorrect": ["the 7th", "the 9th", "the 10th"]},
+            {"japanese": "ここのか", "english": "the 9th", "incorrect": ["the 8th", "the 10th", "the 11th"]},
+            {"japanese": "とおか", "english": "the 10th", "incorrect": ["the 9th", "the 11th", "the 12th"]},
+            {"japanese": "じゅういちにち", "english": "the 11th", "incorrect": ["the 10th", "the 12th", "the 13th"]},
+            {"japanese": "じゅうににち", "english": "the 12th", "incorrect": ["the 11th", "the 13th", "the 14th"]},
+            {"japanese": "じゅうさんにち", "english": "the 13th", "incorrect": ["the 12th", "the 14th", "the 15th"]},
+            {"japanese": "じゅうよっか", "english": "the 14th", "incorrect": ["the 13th", "the 15th", "the 16th"]},
+            {"japanese": "じゅうごにち", "english": "the 15th", "incorrect": ["the 14th", "the 16th", "the 17th"]},
+            {"japanese": "じゅうろくにち", "english": "the 16th", "incorrect": ["the 15th", "the 17th", "the 18th"]},
+            {"japanese": "じゅうしちにち", "english": "the 17th", "incorrect": ["the 16th", "the 18th", "the 19th"]},
+            {"japanese": "じゅうはちにち", "english": "the 18th", "incorrect": ["the 17th", "the 19th", "the 20th"]},
+            {"japanese": "じゅうくにち", "english": "the 19th", "incorrect": ["the 18th", "the 20th", "the 21st"]},
+            {"japanese": "はつか", "english": "the 20th", "incorrect": ["the 19th", "the 21st", "the 22nd"]},
+            {"japanese": "にじゅういちにち", "english": "the 21st", "incorrect": ["the 20th", "the 22nd", "the 23rd"]},
+            {"japanese": "にじゅうににち", "english": "the 22nd", "incorrect": ["the 21st", "the 23rd", "the 24th"]},
+            {"japanese": "にじゅうさんにち", "english": "the 23rd", "incorrect": ["the 22nd", "the 24th", "the 25th"]},
+            {"japanese": "にじゅうよっか", "english": "the 24th", "incorrect": ["the 23rd", "the 25th", "the 26th"]},
+            {"japanese": "にじゅうごにち", "english": "the 25th", "incorrect": ["the 24th", "the 26th", "the 27th"]},
+            {"japanese": "にじゅうろくにち", "english": "the 26th", "incorrect": ["the 25th", "the 27th", "the 28th"]},
+            {"japanese": "にじゅうしちにち", "english": "the 27th", "incorrect": ["the 26th", "the 28th", "the 29th"]},
+            {"japanese": "にじゅうはちにち", "english": "the 28th", "incorrect": ["the 27th", "the 29th", "the 30th"]},
+            {"japanese": "にじゅうくにち", "english": "the 29th", "incorrect": ["the 28th", "the 30th", "the 31st"]},
+            {"japanese": "さんじゅうにち", "english": "the 30th", "incorrect": ["the 29th", "the 31st", "the 1st"]},
+            {"japanese": "さんじゅういちにち", "english": "the 31st", "incorrect": ["the 30th", "the 1st", "the 2nd"]}
+        ];
+
+        let currentDate, score, life, remainingDates, timer, timeLeft, questionsLeft;
+
+        function startGame() {
+            score = 0;
+            life = 5;
+            questionsLeft = 20;
+            remainingDates = [...dateList];
+            updateScore();
+            updateLife();
+            updateQuestionsLeft();
+            nextDate();
+            document.getElementById('startButton').style.display = 'none';
+        }
+
+        function nextDate() {
+            if (questionsLeft === 0 || remainingDates.length === 0) {
+                endGame();
+                return;
+            }
+            const index = Math.floor(Math.random() * remainingDates.length);
+            currentDate = remainingDates.splice(index, 1)[0];
+            document.getElementById('date').textContent = currentDate.japanese;
+            
+            const options = [...currentDate.incorrect, currentDate.english];
+            shuffleArray(options);
+            const optionsHTML = options.map(option => 
+                `<button onclick="checkAnswer('${option}')">${option}</button>`
+            ).join('');
+            document.getElementById('options').innerHTML = optionsHTML;
+
+            startTimer();
+        }
+
+        function startTimer() {
+            timeLeft = 7.0;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                document.getElementById('timerBar').style.width = `${(timeLeft / 7) * 100}%`;
+                document.getElementById('timerText').textContent = timeLeft.toFixed(1);
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAnswer(null);
+                }
+            }, 100);
+        }
+
+        function checkAnswer(answer) {
+            clearInterval(timer);
+            questionsLeft--;
+            updateQuestionsLeft();
+            if (answer === currentDate.english) {
+                score++;
+                updateScore();
+            } else {
+                life--;
+                updateLife();
+                showPopup(`Incorrect. The correct answer is: ${currentDate.english}`);
+            }
+            
+            if (life === 0 || questionsLeft === 0) {
+                endGame();
+            } else {
+                nextDate();
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = `Score: ${score}`;
+        }
+
+        function updateLife() {
+            document.getElementById('life').textContent = `Life: ${life}`;
+        }
+
+        function updateQuestionsLeft() {
+            document.getElementById('questionsLeft').textContent = `Questions Left: ${questionsLeft}`;
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            showPopup(`Game Over! Your final score is ${score} out of ${20 - questionsLeft} questions.`);
+            document.getElementById('startButton').style.display = 'block';
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function showPopup(message) {
+            document.getElementById('popupMessage').textContent = message;
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+            if (life > 0 && questionsLeft > 0) {
+                nextDate();
+            }
+        }
+    </script>
+</body>
+</html>
